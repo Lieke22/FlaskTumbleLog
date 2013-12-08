@@ -30,7 +30,6 @@ class Detail(MethodView):
     }
 
     def get_context(self, slug=None):
-
         if slug:
             post = Post.objects.get_or_404(slug=slug)
             #Handle old posts types as well
@@ -54,8 +53,13 @@ class Detail(MethodView):
         return context
 
     def get(self, slug):
-        context = self.get_context(slug)
-        return render_template('admin/detail.html', **context)
+        if request.args.get('action') == 'delete':
+            Post.objects.get_or_404(slug=slug).delete()
+            return redirect(url_for('admin.index'))
+        else:
+            context = self.get_context(slug)
+            return render_template('admin/detail.html', **context)
+
 
     def post(self, slug):
         context = self.get_context(slug)
@@ -74,3 +78,4 @@ class Detail(MethodView):
 admin.add_url_rule('/admin/', view_func=List.as_view('index'))
 admin.add_url_rule('/admin/create/', defaults={'slug': None}, view_func=Detail.as_view('create'))
 admin.add_url_rule('/admin/<slug>/', view_func=Detail.as_view('edit'))
+admin.add_url_rule('/admin/delete/<slug>/',view_func=Detail.as_view('delete'))
